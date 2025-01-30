@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Users</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <style>
+        .chart-container {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .user-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8">Active Users</h1>
+        
+        <!-- Chart Section -->
+        <div class="chart-container mb-8">
+            <canvas id="activeUsersChart"></canvas>
+        </div>
+
+        <!-- Active Users List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for user in active_users %}
+                <div class="user-card">
+                    <h3 class="text-xl font-semibold">{{ user|default:"Anonymous" }}</h3>
+                    <p class="text-gray-400">{{ user.ip_address }}</p>
+                    <p class="text-sm text-gray-500">Last Active: {{ user.last_activity }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // GSAP Animations
+        gsap.from(".chart-container", { duration: 1, y: -50, opacity: 0, ease: "power2.out" });
+        gsap.from(".user-card", { duration: 1, y: 50, opacity: 0, stagger: 0.2, ease: "power2.out" });
+
+        // Chart.js Configuration
+        const ctx = document.getElementById('activeUsersChart').getContext('2d');
+        const activeUsersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [{% for user in active_users %}"{{ user|default:'Anonymous' }}",{% endfor %}],
+                datasets: [{
+                    label: 'Last Activity',
+                    data: [{% for user in active_users %}"{{ user.last_activity|date:'U' }}",{% endfor %}],
+                    backgroundColor: [
+                        'rgba(99, 102, 241, 0.6)', // Indigo
+                        'rgba(79, 70, 229, 0.6)', // Indigo (darker)
+                        'rgba(129, 140, 248, 0.6)', // Light Indigo
+                        'rgba(165, 180, 252, 0.6)', // Lighter Indigo
+                        'rgba(199, 210, 254, 0.6)', // Very Light Indigo
+                        'rgba(224, 231, 255, 0.6)' // Lightest Indigo
+                    ],
+                    borderColor: [
+                        'rgba(99, 102, 241, 1)', // Indigo
+                        'rgba(79, 70, 229, 1)', // Indigo (darker)
+                        'rgba(129, 140, 248, 1)', // Light Indigo
+                        'rgba(165, 180, 252, 1)', // Lighter Indigo
+                        'rgba(199, 210, 254, 1)', // Very Light Indigo
+                        'rgba(224, 231, 255, 1)' // Lightest Indigo
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Date(value * 1000).toLocaleTimeString();
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' // Legend text color
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart'
+                }
+            }
+        });
+    </script>
+</body>
+</html>
